@@ -1,5 +1,5 @@
 # python 3.9
-#https://www.python.org/ftp/python/3.9.13/python-3.9.13-amd64.exe
+# https://www.python.org/ftp/python/3.9.13/python-3.9.13-amd64.exe
 
 # Các gói cần cài đặt
 # pip install SQLAlchemy
@@ -11,8 +11,11 @@
 import pyodbc
 import psycopg2
 import pandas as pd
+import sqlite3
 
 # SQL info
+from sqlalchemy import create_engine
+
 sql_pwd = 'admin123'
 sql_user = 'root'
 # sql db info
@@ -25,6 +28,7 @@ pg_user = 'postgres'
 pg_pwd = 'admin12345'
 pg_server = '103.130.215.192'
 pg_db = 'northwind_v1'
+
 
 # pg_user = 'tg_retrieval'
 # pg_pwd = 'noatake'
@@ -42,7 +46,7 @@ def extract_sql():
         src_cursor = sql_server_conn.cursor()
         # execute_query
         src_cursor.execute(""" select t.name as table_name 
-                from sys.tables t where t.name in ('Customers') """)
+                from sys.tables t where t.name in ('Customers', 'Employees') """)
 
         src_tables = src_cursor.fetchall()
 
@@ -61,18 +65,22 @@ def load_to_pg(df, tbl):
     try:
         rows_imported = 0
         # PostgreSQL connection details
-        pg_conn = psycopg2.connect(
-            host=f"{pg_server}",
-            port="5432",
-            database=f"{pg_db}",
-            user=f"{pg_user}",
-            password=f"{pg_pwd}"
-        )
+        pg_conn = create_engine(
+            url="postgresql://{0}:{1}@{2}:{3}/{4}".format(pg_user, pg_pwd, pg_server, '5432', pg_db))
+        #     psycopg2.connect(
+        #     host=f"{pg_server}",
+        #     port="5432",
+        #     database=f"{pg_db}",
+        #     user=f"{pg_user}",
+        #     password=f"{pg_pwd}"
+        # )
         # save df to postgresql
         print(tbl)
         tbl_name_transform = None
         if tbl == "Customers":
             tbl_name_transform = "customers"
+        elif tbl == "Employees":
+            tbl_name_transform = "employees"
         # elif tbl == "Products":
         #     tbl_name_transform = "products"
         # elif tbl == "Orders":
@@ -82,7 +90,7 @@ def load_to_pg(df, tbl):
 
         # Load the data into PostgreSQL
         print(pg_conn)
-        df.to_sql(f"{tbl_name_transform}", pg_conn, if_exists='replace', index=False)
+        df.to_sql(f"{tbl_name_transform}", pg_conn, if_exists='append', index=False)
 
         rows_imported += len(df)
 
@@ -90,7 +98,7 @@ def load_to_pg(df, tbl):
     except Exception as e:
         print('Data import error:' + str(e))
     finally:
-        pg_conn.close()
+        pg_conn.dispose()
 
 
 try:
