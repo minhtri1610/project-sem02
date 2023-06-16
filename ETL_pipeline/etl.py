@@ -446,8 +446,74 @@ def create_schema(schema_name):
 def load_data():
     try:
         print('vao load data')
+        conn = psycopg2.connect(
+            host=pg_server,
+            database=pg_db,
+            user=pg_user,
+            password=pg_pwd
+        )
+        cur = conn.cursor()
+
+        # Query the table names from the metadata
+        cur.execute(f"""
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = '{schema_pg}'
+        """)
+
+        # Fetch all table names from the result set
+        table_names = [row[0] for row in cur.fetchall()]
+
+        # Iterate over the table names and transfer data to the "public" schema
+        for table_name in table_names:
+            engine = create_engine(url="postgresql://{0}:{1}@{2}:{3}/{4}".format(pg_user, pg_pwd, pg_server, '5432', pg_db))
+            df_schema = pd.read_sql_table(table_name, engine, schema=schema_pg)
+
+            target_schema = "public"
+            df_public = pd.read_sql_table(table_name, engine, schema=target_schema)
+
+            load_table(df_schema, df_public, table_name, engine)
+
+        # Close connection
+        cur.close()
+        conn.close()
     except Exception as ex:
         print('Error load_data : ' + str(ex))
+
+
+def load_table(source_df, target_df, table_name, engine):
+    try:
+        unique_identifier = ''
+        if table_name == 'categories':
+            unique_identifier = 'category_id'
+            
+        elif table_name == 'customer_customer_demo':
+            unique_identifier = 'customer_type_id'
+        elif table_name == 'customers':
+            unique_identifier = 'customer_id'
+        elif table_name == 'employee_territories':
+            unique_identifier = 'territory_id'
+        elif table_name == 'employees':
+            unique_identifier = 'employee_id'
+        elif table_name == 'order_details':
+            unique_identifier = 'customer_id'
+        elif table_name == 'orders':
+            unique_identifier = 'order_id'
+        elif table_name == 'products':
+            unique_identifier = 'product_id'
+        elif table_name == 'region':
+            unique_identifier = 'region_id'
+        elif table_name == 'shippers':
+            unique_identifier = 'shipper_id'
+        elif table_name == 'suppliers':
+            unique_identifier = 'supplier_id'
+        elif table_name == 'territories':
+            unique_identifier = 'territory_id'
+        elif table_name == 'us_states':
+            unique_identifier = 'state_id'
+
+    except Exception as ex:
+        print('Error load_table : ' + str(ex))
 
 
 # đây là các bước chạy của quá trình ETL dữ liệu
@@ -457,9 +523,9 @@ def load_data():
 
 try:
     # create schema pg (b1)
-    create_schema(schema_pg)
+    # create_schema(schema_pg)
     # extract and transform (b2)
-    extract_sql()
+    # extract_sql()
     # load db pg (b3)
     load_data()
 except Exception as ex:
