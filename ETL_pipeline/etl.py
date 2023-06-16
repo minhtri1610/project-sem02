@@ -467,6 +467,7 @@ def load_data():
         # Iterate over the table names and transfer data to the "public" schema
         for table_name in table_names:
             engine = create_engine(url="postgresql://{0}:{1}@{2}:{3}/{4}".format(pg_user, pg_pwd, pg_server, '5432', pg_db))
+
             df_schema = pd.read_sql_table(table_name, engine, schema=schema_pg)
 
             target_schema = "public"
@@ -486,7 +487,7 @@ def load_table(source_df, target_df, table_name, engine):
         unique_identifier = ''
         if table_name == 'categories':
             unique_identifier = 'category_id'
-
+            dtype = {'foreign_key_column': sqlalchemy.ForeignKey('referenced_table.referenced_column')}
         elif table_name == 'customer_customer_demo':
             unique_identifier = 'customer_type_id'
         elif table_name == 'customers':
@@ -512,19 +513,12 @@ def load_table(source_df, target_df, table_name, engine):
         elif table_name == 'us_states':
             unique_identifier = 'state_id'
 
-        # Merge the source dataframe with the target dataframe on the primary key column(s)
-        merged_df = pd.merge(target_df, source_df, on=f'{unique_identifier}', how='outer')
-
-        # Update rows in the target table where there is a match on the primary key column(s)
-        update_df = merged_df[merged_df['primary_key_column'].notnull()]
-        update_df.to_sql('target_table', con=engine, if_exists='replace', index=False)
-
-        # Insert rows into the target table where there is no match on the primary key column(s)
-        insert_df = merged_df[merged_df['primary_key_column'].isnull()]
-        insert_df.to_sql('target_table', con=engine, if_exists='append', index=False)
+        # Update the target table with the new values from the source dataframe
+        source_df.to_sql(table_name, engine, if_exists='replace', index=False)
 
     except Exception as ex:
         print('Error load_table : ' + str(ex))
+
 
 
 # đây là các bước chạy của quá trình ETL dữ liệu
