@@ -486,7 +486,7 @@ def load_table(source_df, target_df, table_name, engine):
         unique_identifier = ''
         if table_name == 'categories':
             unique_identifier = 'category_id'
-            
+
         elif table_name == 'customer_customer_demo':
             unique_identifier = 'customer_type_id'
         elif table_name == 'customers':
@@ -511,6 +511,17 @@ def load_table(source_df, target_df, table_name, engine):
             unique_identifier = 'territory_id'
         elif table_name == 'us_states':
             unique_identifier = 'state_id'
+
+        # Merge the source dataframe with the target dataframe on the primary key column(s)
+        merged_df = pd.merge(target_df, source_df, on=f'{unique_identifier}', how='outer')
+
+        # Update rows in the target table where there is a match on the primary key column(s)
+        update_df = merged_df[merged_df['primary_key_column'].notnull()]
+        update_df.to_sql('target_table', con=engine, if_exists='replace', index=False)
+
+        # Insert rows into the target table where there is no match on the primary key column(s)
+        insert_df = merged_df[merged_df['primary_key_column'].isnull()]
+        insert_df.to_sql('target_table', con=engine, if_exists='append', index=False)
 
     except Exception as ex:
         print('Error load_table : ' + str(ex))
