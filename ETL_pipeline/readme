@@ -1,0 +1,17 @@
+# ở pg khởi tạo 1 schema để etl dữ liệu từ sql server vào
+
+# sau khi tiến trình etl qua schema postgres hoàn thành
+# ta sẽ tiến hành compare dữ liệu giữa schema postgres và schema public của pg datawarehouse,
+# tiến hành update or insert từ schema etl sang public
+
+
+#dimension modeling
+#tạo schema trên cơ sở dữ liệu của datawarehouse
+
+#create các bảng dim và fact theo business yêu cầu
+
+# tiến hành query dữ liệu để insert vào các bảng dim sau đó tới bảng fact
+
+# tiến hành quy trình datapipline
+
+#https://docs.sqlalchemy.org/en/20/core/type_basics.html
