@@ -487,7 +487,10 @@ def load_table(source_df, target_df, table_name, engine):
         unique_identifier = ''
         if table_name == 'categories':
             unique_identifier = 'category_id'
-            dtype = {'foreign_key_column': sqlalchemy.ForeignKey('referenced_table.referenced_column')}
+            dtype = {'category_id': sqlalchemy.ForeignKey('products.category_id')}
+            print(dtype)
+            # Update the target table with the new values from the source dataframe
+            source_df.to_sql(table_name, engine, if_exists='replace', index=False, dtype=dtype)
         elif table_name == 'customer_customer_demo':
             unique_identifier = 'customer_type_id'
         elif table_name == 'customers':
@@ -513,8 +516,7 @@ def load_table(source_df, target_df, table_name, engine):
         elif table_name == 'us_states':
             unique_identifier = 'state_id'
 
-        # Update the target table with the new values from the source dataframe
-        source_df.to_sql(table_name, engine, if_exists='replace', index=False)
+
 
     except Exception as ex:
         print('Error load_table : ' + str(ex))
@@ -528,11 +530,11 @@ def load_table(source_df, target_df, table_name, engine):
 
 try:
     # create schema pg (b1)
-    # create_schema(schema_pg)
+    create_schema(schema_pg)
     # extract and transform (b2)
-    # extract_sql()
+    extract_sql()
     # load db pg (b3)
-    load_data()
+    # load_data()
 except Exception as ex:
     print("Error Run function init: " + str(ex))
 
