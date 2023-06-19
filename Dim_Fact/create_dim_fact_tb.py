@@ -15,6 +15,9 @@ conn = psycopg2.connect(
 # Create a cursor object to execute SQL queries
 cur = conn.cursor()
 
+# delete schema
+# DROP SCHEMA IF EXISTS datamart_customer_old CASCADE;
+
 # Create a schema
 schema_name = "datamart_customer"
 create_schema_query = f"CREATE SCHEMA IF NOT EXISTS {schema_name};"
@@ -57,7 +60,7 @@ cur.execute(create_tb_dim_products)
 
 # Create a table fact
 table_name = "fact_orders"
-create_tb_dim_date = f"""
+create_tb_fact_orders = f"""
     CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
         order_id int NOT NULL PRIMARY KEY,
         customer_id bpchar,
@@ -81,7 +84,7 @@ create_tb_dim_date = f"""
         FOREIGN KEY (product_id) REFERENCES datamart_customer.dim_products (product_id)
     );
 """
-cur.execute(create_tb_dim_date)
+cur.execute(create_tb_fact_orders)
 
 # Create a table dim_date
 table_name = "dim_date"
