@@ -55,25 +55,11 @@ create_tb_dim_products = f"""
 """
 cur.execute(create_tb_dim_products)
 
-# Create a table dim_date
-table_name = "dim_date"
-create_tb_dim_date = f"""
-    CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
-        order_date date,
-        year INT,
-        month INT,
-        day INT,
-        short_name text,
-        quarter INT
-    );
-"""
-cur.execute(create_tb_dim_date)
-
 # Create a table fact
 table_name = "fact_orders"
 create_tb_dim_date = f"""
     CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
-        order_id smallint NOT NULL PRIMARY KEY,
+        order_id int NOT NULL PRIMARY KEY,
         customer_id bpchar,
         product_id smallint,
         order_date date,
@@ -93,6 +79,23 @@ create_tb_dim_date = f"""
         Region_Sales int,
         FOREIGN KEY (customer_id) REFERENCES datamart_customer.dim_customer (customer_id),
         FOREIGN KEY (product_id) REFERENCES datamart_customer.dim_products (product_id)
+    );
+"""
+cur.execute(create_tb_dim_date)
+
+# Create a table dim_date
+table_name = "dim_date"
+create_tb_dim_date = f"""
+    CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
+        id int NOT NULL PRIMARY KEY,
+        order_id int NOT NULL,
+        order_date date,
+        year INT,
+        month INT,
+        day INT,
+        short_name text,
+        quarter INT,
+        FOREIGN KEY (order_id) REFERENCES datamart_customer.fact_orders (order_id)
     );
 """
 cur.execute(create_tb_dim_date)
