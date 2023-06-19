@@ -30,14 +30,11 @@ create_tb_dim_customer = f"""
         customer_id bpchar NOT NULL PRIMARY KEY,
         company_name character varying(40) NOT NULL,
         contact_name character varying(30),
-        contact_title character varying(30),
         address character varying(60),
         city character varying(15),
         region character varying(15),
         postal_code character varying(10),
-        country character varying(15),
-        phone character varying(24),
-        fax character varying(24)
+        country character varying(15)
     );
 """
 cur.execute(create_tb_dim_customer)
@@ -46,7 +43,7 @@ cur.execute(create_tb_dim_customer)
 table_name = "dim_products"
 create_tb_dim_products = f"""
     CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
-        product_id smallint NOT NULL PRIMARY KEY,
+        product_id int NOT NULL PRIMARY KEY,
         product_name character varying(40) NOT NULL,
         quantity_per_unit character varying(20),
         unit_price real,
@@ -58,30 +55,47 @@ create_tb_dim_products = f"""
 """
 cur.execute(create_tb_dim_products)
 
+# Create a table dim_employees
+table_name = "dim_employees"
+create_tb_dim_employees = f"""
+    CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
+        employee_id int NOT NULL PRIMARY KEY,
+        last_name character varying(20),
+        first_name character varying(10),
+        title character varying(30),
+        city character varying(15),
+        region character varying(15),
+        country character varying(15),
+        reports_to smallint
+    );
+"""
+cur.execute(create_tb_dim_employees)
+
 # Create a table fact
 table_name = "fact_orders"
 create_tb_fact_orders = f"""
     CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
         order_id int NOT NULL PRIMARY KEY,
         customer_id bpchar,
-        product_id smallint,
-        order_date date,
+        product_id int,
+        employee_id int,
         required_date date,
         shipped_date date,
         unit_price real NOT NULL,
         quantity smallint NOT NULL,
         discount real NOT NULL,
         freight real,
-        Cumulated_Percentage int,
-        Cumulated_Sales int,
-        Customer_Sales int,
-        Customer_Sales_Group int,
-        Cumulated_Percentage_Region int,
-        Cumulated_Sales_Region int,
-        Region_Group int,
-        Region_Sales int,
+        cumulated_percentage int,
+        cumulated_sales int,
+        customer_sales int,
+        customer_sales_group int,
+        cumulated_percentage_region int,
+        cumulated_sales_region int,
+        region_group int,
+        region_sales int,
         FOREIGN KEY (customer_id) REFERENCES datamart_customer.dim_customer (customer_id),
-        FOREIGN KEY (product_id) REFERENCES datamart_customer.dim_products (product_id)
+        FOREIGN KEY (product_id) REFERENCES datamart_customer.dim_products (product_id),
+        FOREIGN KEY (employee_id) REFERENCES datamart_customer.dim_employees (employee_id)
     );
 """
 cur.execute(create_tb_fact_orders)
