@@ -82,15 +82,6 @@ def execute_to_table(dbcursor, target_table, row, type_action):
 
         if target_table == 'dim_products':
             col_id = 'product_id'
-
-
-
-
-
-
-
-
-
             index = {'product_id': 0, 'product_name': 1, 'quantity_per_unit': 2, 'unit_price': 3, 'units_in_stock': 4, 'units_on_order': 5, 'reorder_level': 6, 'discontinued': 7}
 
             # if type_action == 'update':
