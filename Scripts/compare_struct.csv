@@ -1,0 +1,89 @@
+table_name,column_name,postgres_type,sql_server_type
+customer_demographics,customer_type_id,character,nchar
+customer_demographics,customer_desc,text,ntext
+customer_customer_demo,customer_type_id,character,nchar
+customer_customer_demo,customer_id,character,nchar
+customers,region,character varying,nvarchar
+customers,postal_code,character varying,nvarchar
+customers,phone,character varying,nvarchar
+customers,fax,character varying,nvarchar
+customers,customer_id,character,nchar
+customers,country,character varying,nvarchar
+customers,contact_title,character varying,nvarchar
+customers,contact_name,character varying,nvarchar
+customers,company_name,character varying,nvarchar
+customers,city,character varying,nvarchar
+customers,address,character varying,nvarchar
+employees,title_of_courtesy,character varying,nvarchar
+employees,title,character varying,nvarchar
+employees,reports_to,smallint,int
+employees,region,character varying,nvarchar
+employees,postal_code,character varying,nvarchar
+employees,photo_path,character varying,nvarchar
+employees,photo,bytea,image
+employees,notes,text,ntext
+employees,last_name,character varying,nvarchar
+employees,home_phone,character varying,nvarchar
+employees,hire_date,date,datetime
+employees,first_name,character varying,nvarchar
+employees,extension,character varying,nvarchar
+employees,employee_id,smallint,int
+employees,country,character varying,nvarchar
+employees,city,character varying,nvarchar
+employees,birth_date,date,datetime
+employees,address,character varying,nvarchar
+categories,picture,bytea,image
+categories,description,text,ntext
+categories,category_name,character varying,nvarchar
+categories,category_id,smallint,int
+products,units_on_order,smallint,smallint
+products,units_in_stock,smallint,smallint
+products,unit_price,real,money
+products,supplier_id,smallint,int
+products,reorder_level,smallint,smallint
+products,quantity_per_unit,character varying,nvarchar
+products,product_name,character varying,nvarchar
+products,product_id,smallint,int
+products,discontinued,integer,bit
+products,category_id,smallint,int
+suppliers,supplier_id,smallint,int
+suppliers,region,character varying,nvarchar
+suppliers,postal_code,character varying,nvarchar
+suppliers,phone,character varying,nvarchar
+suppliers,homepage,text,ntext
+suppliers,fax,character varying,nvarchar
+suppliers,country,character varying,nvarchar
+suppliers,contact_title,character varying,nvarchar
+suppliers,contact_name,character varying,nvarchar
+suppliers,company_name,character varying,nvarchar
+suppliers,city,character varying,nvarchar
+suppliers,address,character varying,nvarchar
+orders,shipped_date,date,int
+orders,ship_via,smallint,nvarchar
+orders,ship_region,character varying,nvarchar
+orders,ship_postal_code,character varying,datetime
+orders,ship_name,character varying,nvarchar
+orders,ship_country,character varying,nvarchar
+orders,ship_city,character varying,nvarchar
+orders,ship_address,character varying,nvarchar
+orders,required_date,date,datetime
+orders,order_id,smallint,int
+orders,order_date,date,datetime
+orders,freight,real,money
+orders,employee_id,smallint,int
+orders,customer_id,character,nchar
+shippers,shipper_id,smallint,int
+shippers,phone,character varying,nvarchar
+shippers,company_name,character varying,nvarchar
+region,region_id,smallint,int
+region,region_description,character,nchar
+territories,territory_id,character varying,nvarchar
+territories,territory_description,character,nchar
+territories,region_id,smallint,int
+employee_territories,territory_id,character varying,nvarchar
+employee_territories,employee_id,smallint,int
+order_details,unit_price,real,money
+order_details,quantity,smallint,smallint
+order_details,product_id,smallint,int
+order_details,order_id,smallint,int
+order_details,discount,real,real

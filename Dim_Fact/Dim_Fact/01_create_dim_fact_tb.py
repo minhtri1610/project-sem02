@@ -16,7 +16,7 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 # delete schema
-# DROP SCHEMA IF EXISTS datamart_customer CASCADE;
+# DROP SCHEMA IF EXISTS datamart_customer_old CASCADE;
 print('Bắt đầu tiến trình tạo datamart')
 
 # Create a schema
