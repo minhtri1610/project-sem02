@@ -62,7 +62,7 @@ CREATE TABLE datamart_customer.fact_orders (
 );
 
 CREATE TABLE IF NOT EXISTS datamart_customer.dim_date (
-        id int NOT NULL PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         order_id int NOT NULL,
         order_date date,
         year INT,

@@ -25,7 +25,7 @@ sql_pwd = 'admin123'
 sql_user = 'root'
 # sql db info
 sql_driver = '{SQL Server}'
-sql_server = '192.168.100.27'
+sql_server = 'DESKTOP-L6QI5J7'
 sql_database = 'northwind_sql'
 
 # PG info
@@ -428,7 +428,7 @@ def create_schema(schema_name):
         cur = conn.cursor()
 
         # Define the SQL statement to create a schema
-        create_schema_query = f"CREATE SCHEMA {schema_name};"
+        create_schema_query = f"CREATE SCHEMA IF NOT EXISTS {schema_name};"
 
         # Execute the query to create the schema
         cur.execute(create_schema_query)

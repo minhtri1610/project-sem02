@@ -17,6 +17,7 @@ cur = conn.cursor()
 
 # delete schema
 # DROP SCHEMA IF EXISTS datamart_customer_old CASCADE;
+print('Bắt đầu tiến trình tạo datamart')
 
 # Create a schema
 schema_name = "datamart_customer"
@@ -104,7 +105,7 @@ cur.execute(create_tb_fact_orders)
 table_name = "dim_date"
 create_tb_dim_date = f"""
     CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
-        id int NOT NULL PRIMARY KEY,
+        id SERIAL NOT NULL PRIMARY KEY,
         order_id int NOT NULL,
         order_date date,
         year INT,
@@ -119,6 +120,8 @@ cur.execute(create_tb_dim_date)
 
 # Commit the changes to the database
 conn.commit()
+
+print('Hoàn tất tiến trình tạo datamart')
 
 # Close the cursor and connection
 cur.close()
