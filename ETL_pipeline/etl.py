@@ -25,14 +25,14 @@ sql_pwd = 'admin123'
 sql_user = 'root'
 # sql db info
 sql_driver = '{SQL Server}'
-sql_server = 'DESKTOP-L6QI5J7'
+sql_server = 'INTELPC'
 sql_database = 'northwind_sql'
 
 # PG info
 pg_user = 'postgres'
 pg_pwd = 'admin12345'
 pg_server = '103.130.215.192'
-pg_db = 'northwind_v3'
+pg_db = 'northwind_v4'
 
 
 def extract_sql():
@@ -47,12 +47,15 @@ def extract_sql():
         # execute_query
         src_cursor.execute("""select t.name as table_name from sys.tables t where t.name in ('Categories', 
         'CustomerCustomerDemo', 'CustomerDemographics', 'Customers', 'Employees', 'EmployeeTerritories', 
-        'OrderDetails', 'Orders', 'Products', 'Region', 'Shippers', 'Suppliers', 'Territories') """)
+        'Order Details', 'Orders', 'Products', 'Region', 'Shippers', 'Suppliers', 'Territories') """)
 
         src_tables = src_cursor.fetchall()
-        print(src_tables)
+
         for tbl in src_tables:
-            query = f"SELECT * FROM {tbl[0]}"
+            print('---')
+            print(tbl[0])
+            print('+++')
+            query = f"SELECT * FROM [{tbl[0]}]"
             df = pd.read_sql(query, sql_server_conn)
             df_transform = transform_table(tbl[0], df)
             load_to_pg(df_transform, tbl[0])
@@ -321,7 +324,7 @@ def transform_table(tbl, df_sql):
             data_transform.append(data_transform_type)
             return data_transform
 
-        if tbl == 'OrderDetails':
+        if tbl == 'OrderDetails' or tbl == 'Order Details':
             data_transform_col = df_sql.rename(
                 columns={"OrderID": "order_id",
                          "ProductID": "product_id",
@@ -384,7 +387,7 @@ def load_to_pg(df, tbl):
             tbl_name_transform = "employees"
         elif tbl == "EmployeeTerritories":
             tbl_name_transform = "employee_territories"
-        elif tbl == "OrderDetails":
+        elif tbl == "Order Details":
             tbl_name_transform = "order_details"
         elif tbl == "Orders":
             tbl_name_transform = "orders"
@@ -466,14 +469,8 @@ def load_data():
 
         # Iterate over the table names and transfer data to the "public" schema
         for table_name in table_names:
-            engine = create_engine(url="postgresql://{0}:{1}@{2}:{3}/{4}".format(pg_user, pg_pwd, pg_server, '5432', pg_db))
 
-            df_schema = pd.read_sql_table(table_name, engine, schema=schema_pg)
-
-            target_schema = "public"
-            df_public = pd.read_sql_table(table_name, engine, schema=target_schema)
-
-            load_table(df_schema, df_public, table_name, engine)
+            load_table(table_name,schema_pg, conn)
 
         # Close connection
         cur.close()
@@ -482,45 +479,492 @@ def load_data():
         print('Error load_data : ' + str(ex))
 
 
-def load_table(source_df, target_df, table_name, engine):
+def load_table(table_name, schema_source, conn):
     try:
+        schema_targe = 'public'
         unique_identifier = ''
+        dbcursor = conn.cursor()
+
         if table_name == 'categories':
-            unique_identifier = 'category_id'
-            dtype = {'category_id': sqlalchemy.ForeignKey('products.category_id')}
-            print(dtype)
-            # Update the target table with the new values from the source dataframe
-            source_df.to_sql(table_name, engine, if_exists='replace', index=False, dtype=dtype)
+            print('tbl categories')
+            col_id = 'category_id'
+            dbcursor.execute(f"""
+                            SELECT ct.category_id, ct.category_name, ct.description, ct.picture
+                            FROM {schema_source}.{table_name} as ct
+                        """)
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s', (row[0],))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
+
         elif table_name == 'customer_customer_demo':
-            unique_identifier = 'customer_type_id'
+            print('tbl customer_customer_demo')
+            col_id = 'customer_id'
+            dbcursor.execute(f"""SELECT ct.customer_id, ct.customer_type_id
+                                        FROM {schema_source}.{table_name} as ct
+                                    """)
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s', (row[0],))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
+        elif table_name == 'customer_demographics':
+            print('tbl customer_demographics')
+            col_id = 'customer_type_id'
+            dbcursor.execute(f"""SELECT cd.customer_type_id, cd.customer_desc
+                                                    FROM {schema_source}.{table_name} as cd
+                                                """)
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s', (row[0],))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
         elif table_name == 'customers':
-            unique_identifier = 'customer_id'
+            print('tbl customers')
+            col_id = 'customer_id'
+            dbcursor.execute(f"""SELECT c.customer_id, c.company_name, c.company_name, c.contact_name, c.contact_title, c.address, c.city, c.region, c.postal_code, c.country, c.phone, c.fax
+                                                               FROM {schema_source}.{table_name} as c
+                                                           """)
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s', (row[0],))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
         elif table_name == 'employee_territories':
+            print('tbl employee_territories')
+            col_id = 'employee_id'
             unique_identifier = 'territory_id'
+            dbcursor.execute(f"""SELECT et.employee_id, et.territory_id FROM {schema_source}.{table_name} as et""")
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s and {unique_identifier} = %s', (row[0],row[1]))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
+
         elif table_name == 'employees':
-            unique_identifier = 'employee_id'
+            print('tbl employees')
+            col_id = 'employee_id'
+            dbcursor.execute(f"""SELECT et.employee_id, et.last_name, et.first_name, et.title, et.title_of_courtesy, et.birth_date, et.hire_date, et.address, et.city , et.region, et.postal_code, et.country, et.home_phone, et.extension, et.photo, et.notes, et.reports_to, et.photo_path FROM {schema_source}.{table_name} as et""")
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(
+                    f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s',(row[0]))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
         elif table_name == 'order_details':
-            unique_identifier = 'customer_id'
-        elif table_name == 'orders':
-            unique_identifier = 'order_id'
-        elif table_name == 'products':
+            print('tbl order_details')
             unique_identifier = 'product_id'
+            col_id = 'order_id'
+            dbcursor.execute(
+                f"""SELECT et.order_id, et.product_id, et.unit_price, et.quantity, et.discount FROM {schema_source}.{table_name} as et""")
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(
+                    f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s and {unique_identifier} = %s', (row[0], row[1]))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
+        elif table_name == 'orders':
+            print('tbl orders')
+            col_id = 'order_id'
+            dbcursor.execute(
+                f"""SELECT et.order_id, et.customer_id, et.employee_id, et.order_date, et.required_date, 
+                et.shipped_date, et.ship_via, et.freight, et.ship_name, et.ship_address, et.ship_city, 
+                et.ship_region, et.ship_postal_code, et.ship_country FROM {schema_source}.{table_name} as et""")
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(
+                    f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s',
+                    (row[0]))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
+        elif table_name == 'products':
+            print('tbl products')
+            col_id = 'product_id'
+            dbcursor.execute(
+                f"""SELECT  et.product_id, et.product_name, et.supplier_id, et.category_id, et.quantity_per_unit, 
+                et.unit_price, et.units_in_stock, et.units_on_order, et.reorder_level, et.discontinued 
+                FROM {schema_source}.{table_name} as et""")
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(
+                    f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s',
+                    (row[0]))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
         elif table_name == 'region':
-            unique_identifier = 'region_id'
+            print('tbl region')
+            col_id = 'region_id'
+            dbcursor.execute(
+                f"""SELECT  et.region_id, et.region_description 
+                            FROM {schema_source}.{table_name} as et""")
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(
+                    f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s',
+                    (row[0]))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
         elif table_name == 'shippers':
-            unique_identifier = 'shipper_id'
+            print('tbl shippers')
+            col_id = 'shipper_id'
+            dbcursor.execute(
+                f"""SELECT  et.shipper_id, et.company_name , et.phone 
+                                        FROM {schema_source}.{table_name} as et""")
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(
+                    f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s',
+                    (row[0]))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
         elif table_name == 'suppliers':
-            unique_identifier = 'supplier_id'
+            print('tbl suppliers')
+            col_id = 'supplier_id'
+            dbcursor.execute(
+                f"""SELECT et.supplier_id, et.company_name, et.contact_name, et.contact_title, et.address, et.city, et.region, et.postal_code, et.country, et.phone, et.fax, et.home_page FROM {schema_source}.{table_name} as et""")
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(
+                    f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s',
+                    (row[0]))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
         elif table_name == 'territories':
-            unique_identifier = 'territory_id'
+            print('tbl territories')
+            col_id = 'territory_id'
+            dbcursor.execute(
+                f"""SELECT et.territory_id, et.territory_description, et.region_id FROM {schema_source}.{table_name} as et""")
+            data_rows = dbcursor.fetchall()
+            # duyệt qua tất cả các record của data nguồn để xem nên insert hay update
+            for row in data_rows:
+                dbcursor.execute(
+                    f'SELECT * FROM {schema_targe}.{table_name} WHERE {col_id} = %s',
+                    (row[0]))
+                existing_record = dbcursor.fetchone()
+                print(row)
+                if existing_record:
+                    print('update')
+                    # # Update the existing record
+                    execute_to_table(dbcursor, table_name, row, 'update')
+                else:
+                    print('insert')
+                    # Insert a new record
+                    execute_to_table(dbcursor, table_name, row, 'insert')
         elif table_name == 'us_states':
+            print('tbl us_states')
             unique_identifier = 'state_id'
-
-
 
     except Exception as ex:
         print('Error load_table : ' + str(ex))
 
+
+def execute_to_table(dbcursor, table_name, row, type_action):
+    try:
+        schema_target = 'public'
+        if table_name == 'categories':
+            col_id = 'category_id'
+            #định vị thứ tự cột trong mảng
+            index = {'category_id': 0, 'category_name': 1, 'description': 2, 'picture': 3}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET category_name = %s, description = %s, picture = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['category_name']], row[index['description']], row[index['picture']], row[index['category_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (category_id, category_name, description, picture) VALUES (%s, %s, %s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['category_id']], row[index['category_name']], row[index['description']], row[index['picture']]))
+
+        if table_name == 'customer_customer_demo':
+            col_id = 'customer_id'
+            #định vị thứ tự cột trong mảng
+            index = {'customer_id': 0, 'customer_type_id': 1}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET customer_type_id = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['customer_type_id']], row[index['customer_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (customer_id, customer_type_id) VALUES (%s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['customer_id']], row[index['customer_type_id']]))
+
+        if table_name == 'customer_demographics':
+            col_id = 'customer_type_id'
+            #định vị thứ tự cột trong mảng
+            index = {'customer_type_id': 0, 'customer_desc': 1}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET customer_desc = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['customer_desc']], row[index['customer_type_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (customer_type_id, customer_desc) VALUES (%s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['customer_type_id']], row[index['customer_desc']]))
+
+        if table_name == 'customers':
+            col_id = 'customer_id'
+            #định vị thứ tự cột trong mảng
+            index = {'customer_id': 0, 'company_name': 1, 'contact_name': 2, 'contact_title': 3, 'address': 4, 'city': 5, 'region': 6, 'postal_code':7, 'phone': 8, 'fax': 9}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET company_name = %s, contact_name = %s, contact_title = %s, address = %s, city = %s, region = %s, postal_code = %s, phone = %s, fax = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['company_name']], row[index['contact_name']], row[index['contact_title']], row[index['address']], row[index['city']], row[index['region']], row[index['postal_code']], row[index['phone']], row[index['fax']], row[index['customer_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (customer_id, company_name, contact_name, contact_title, address, city, region, postal_code, phone, fax) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['customer_id']], row[index['company_name']], row[index['contact_name']], row[index['contact_title']], row[index['address']], row[index['city']], row[index['region']], row[index['postal_code']], row[index['phone']], row[index['fax']]))
+
+        if table_name == 'employee_territories':
+            col_id = 'employee_id'
+            #định vị thứ tự cột trong mảng
+            index = {'employee_id': 0, 'territory_id': 1}
+
+            if type_action == 'update':
+                print('update')
+                # update_query = f'UPDATE {schema_target}.{table_name} SET employee_id = %s, description = %s, picture = %s WHERE {col_id} = %s'
+                # dbcursor.execute(update_query, (row[index['category_name']], row[index['description']], row[index['picture']], row[index['category_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (employee_id, territory_id) VALUES (%s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['employee_id']], row[index['territory_id']]))
+
+        if table_name == 'employees':
+            col_id = 'employee_id'
+            #định vị thứ tự cột trong mảng
+            index = {'employee_id': 0, 'last_name': 1, 'first_name': 2, 'title': 3, 'title_of_courtesy': 4, 'birth_date': 5, 'hire_date': 6, 'address': 7, 'city': 8, 'region': 9, 'postal_code': 10, 'country': 11, 'home_phone': 12, 'extension': 13, 'photo': 14, 'notes': 15, 'reports_to': 16, 'photo_path': 17}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET last_name = %s, first_name = %s, title = %s, title_of_courtesy = %s, birth_date = %s, hire_date = %s, address = %s, city = %s, region = %s, postal_code = %s, country = %s, home_phone = %s, extension = %s, photo = %s, notes = %s, reports_to = %s, photo_path = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['last_name']], row[index['first_name']], row[index['title']], row[index['title_of_courtesy']], row[index['birth_date']], row[index['hire_date']], row[index['address']], row[index['city']], row[index['region']], row[index['postal_code']], row[index['country']], row[index['home_phone']], row[index['extension']], row[index['photo']], row[index['notes']], row[index['reports_to']], row[index['photo_path']], row[index['employee_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (employee_id, last_name, first_name, title, title_of_courtesy, birth_date, hire_date, address, city, region, postal_code, country, home_phone, extension, photo, notes, reports_to, photo_path) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s %s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['employee_id']], row[index['last_name']], row[index['first_name']], row[index['title']], row[index['title_of_courtesy']], row[index['birth_date']], row[index['hire_date']], row[index['address']], row[index['city']], row[index['region']], row[index['postal_code']], row[index['country']], row[index['home_phone']], row[index['extension']], row[index['photo']], row[index['notes']], row[index['reports_to']], row[index['photo_path']]))
+
+        if table_name == 'order_details':
+            col_id = 'order_id'
+
+            #định vị thứ tự cột trong mảng
+            index = {'order_id': 0, 'product_id': 1, 'unit_price': 2, 'quantity': 3, 'discount': 4}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET unit_price = %s, quantity = %s, discount = %s WHERE {col_id} = %s and product_id = %s'
+                dbcursor.execute(update_query, (row[index['unit_price']], row[index['quantity']], row[index['discount']], row[index['order_id']], row[index['product_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (order_id, product_id, unit_price, quantity, discount) VALUES (%s, %s, %s, %s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['order_id']], row[index['product_id']], row[index['unit_price']], row[index['quantity']], row[index['discount']]))
+
+        if table_name == 'orders':
+            col_id = 'order_id'
+            #định vị thứ tự cột trong mảng
+            index = {'order_id': 0,'customer_id': 1,'employee_id': 2,'order_date': 3,'required_date': 4,'shipped_date': 5,'ship_via': 6,'freight': 7,'ship_name': 8,'ship_address': 9,'ship_city': 10, 'ship_region': 11,'ship_postal_code': 12,'ship_country': 13}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET customer_id = %s, employee_id = %s, ' \
+                               f'order_date = %s, required_date = %s, shipped_date = %s, ship_via = %s, freight = %s, ' \
+                               f'ship_name = %s, ship_address = %s, ship_city = %s, ship_region = %s, ' \
+                               f'ship_postal_code = %s, ship_country = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['customer_id']],row[index['employee_id']],row[index['order_date']],row[index['required_date']],row[index['shipped_date']],row[index['ship_via']],row[index['freight']],row[index['ship_name']],row[index['ship_address']],row[index['ship_city']],row[index['ship_region']],row[index['ship_postal_code']],row[index['ship_country']],row[index['order_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (order_id,customer_id,employee_id,' \
+                               f'order_date,required_date,shipped_date,ship_via,freight,ship_name,ship_address,' \
+                               f'ship_city,ship_region,ship_postal_code,ship_country) VALUES (%s, %s, %s, %s,%s, %s, %s, %s,%s, %s, %s, %s,%s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['order_id']],row[index['customer_id']],row[index['employee_id']],row[index['order_date']],row[index['required_date']],row[index['shipped_date']],row[index['ship_via']],row[index['freight']],row[index['ship_name']],row[index['ship_address']],row[index['ship_city']],row[index['ship_region']],row[index['ship_postal_code']],row[index['ship_country']]))
+
+        if table_name == 'products':
+            col_id = 'product_id'
+            #định vị thứ tự cột trong mảng
+            index = { 'product_id': 0, 'product_name': 1, 'supplier_id': 2, 'category_id': 3, 'quantity_per_unit': 4, 'unit_price': 5, 'units_in_stock': 6, 'units_on_order': 7, 'reorder_level': 8, 'discontinued': 9}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET product_name = %s, supplier_id = %s, ' \
+                               f'category_id = %s, quantity_per_unit = %s, unit_price = %s, units_in_stock = %s, ' \
+                               f'units_on_order = %s, reorder_level = %s, discontinued = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['product_name']], row[index['supplier_id']], row[index['category_id']], row[index['quantity_per_unit']], row[index['unit_price']], row[index['units_in_stock']], row[index['units_on_order']], row[index['reorder_level']], row[index['discontinued']],row[index['product_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} ( product_id, product_name, supplier_id, category_id, quantity_per_unit, unit_price, units_in_stock, units_on_order, reorder_level, discontinued) VALUES (%s, %s, %s, %s,%s, %s, %s, %s,%s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['product_id']], row[index['product_name']], row[index['supplier_id']], row[index['category_id']], row[index['quantity_per_unit']], row[index['unit_price']], row[index['units_in_stock']], row[index['units_on_order']], row[index['reorder_level']], row[index['discontinued']]))
+
+        if table_name == 'region':
+            col_id = 'region_id'
+            #định vị thứ tự cột trong mảng
+            index = {'region_id': 0, 'region_description': 1}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET region_description = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['region_description']], row[index['region_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (region_id, region_description) VALUES (%s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['region_id']], row[index['region_description']]))
+
+        if table_name == 'shippers':
+            col_id = 'shipper_id'
+            #định vị thứ tự cột trong mảng
+            index = {'shipper_id': 0, 'company_name': 1, 'phone': 2}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET company_name = %s, phone = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['company_name']], row[index['phone']], row[index['shipper_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (shipper_id, company_name, phone) VALUES (%s, %s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['shipper_id']], row[index['company_name']], row[index['phone']]))
+
+        if table_name == 'suppliers':
+            col_id = 'supplier_id'
+            #định vị thứ tự cột trong mảng
+            index = { 'supplier_id': 0, 'company_name': 1, 'contact_name': 2, 'contact_title': 3, 'address': 4, 'city': 5, 'region': 6, 'postal_code': 7, 'country': 8, 'phone': 9, 'fax': 10, 'homepage': 11}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET company_name = %s, contact_name = %s, contact_title = %s, address = %s, city = %s, region = %s, postal_code = %s, country = %s, phone = %s, fax = %s, homepage = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['company_name']], row[index['contact_name']], row[index['contact_title']], row[index['address']], row[index['city']], row[index['region']], row[index['postal_code']], row[index['country']], row[index['phone']], row[index['fax']], row[index['homepage']], row[index['supplier_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (supplier_id,company_name,contact_name,' \
+                               f'contact_title,address,city,region,postal_code,country,phone,fax,homepage) VALUES (' \
+                               f'%s, %s, %s, %s,%s, %s, %s, %s,%s, %s, %s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['supplier_id']], row[index['company_name']], row[index['contact_name']], row[index['contact_title']], row[index['address']], row[index['city']], row[index['region']], row[index['postal_code']], row[index['country']], row[index['phone']], row[index['fax']], row[index['homepage']]))
+
+        if table_name == 'territories':
+            col_id = 'territory_id'
+            #định vị thứ tự cột trong mảng
+            index = {'territory_id': 0, 'territory_description': 1, 'region_id': 2}
+
+            if type_action == 'update':
+                update_query = f'UPDATE {schema_target}.{table_name} SET territory_description = %s, region_id = %s WHERE {col_id} = %s'
+                dbcursor.execute(update_query, (row[index['territory_description']], row[index['region_id']], row[index['territory_id']]))
+
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {schema_target}.{table_name} (territory_id, territory_description, region_id) VALUES (%s, %s, %s)'
+                # print(insert_query)
+                dbcursor.execute(insert_query, (row[index['territory_id']], row[index['territory_description']], row[index['region_id']]))
+
+    except Exception as e:
+        print('Error execute_to_table:' + str(e))
 
 
 # đây là các bước chạy của quá trình ETL dữ liệu
@@ -529,12 +973,21 @@ def load_table(source_df, target_df, table_name, engine):
 # b3: Bước cuối cùng update and create data từ schema postgres vào db chính của postgres
 
 try:
-    # create schema pg (b1)
-    create_schema(schema_pg)
-    # extract and transform (b2)
-    extract_sql()
+    # print('Bắt đầu tạo schema tạm')
+    # # create schema pg (b1)
+    # create_schema(schema_pg)
+    # print('Hoàn tất tạo schema')
+    #
+    # print('Bắt đầu tiến trình chuyển data từ SQL vào schema tạm Postgres')
+    # # extract and transform (b2)
+    # extract_sql()
+    # print('Hoàn Tất tiến trình bước 2')
+
+    print('Bắt đầu tiến trình load_data b3')
     # load db pg (b3)
-    # load_data()
+    load_data()
+    print('Hoàn tất tiến trình b3')
+
 except Exception as ex:
     print("Error Run function init: " + str(ex))
 
