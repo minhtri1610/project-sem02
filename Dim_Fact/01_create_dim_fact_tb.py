@@ -57,20 +57,41 @@ create_tb_dim_products = f"""
 cur.execute(create_tb_dim_products)
 
 # Create a table dim_employees
-table_name = "dim_employees"
-create_tb_dim_employees = f"""
+table_name = "dim_revenue_per_cus"
+create_tb_dim_revenue_per_cus = f"""
     CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
-        employee_id int NOT NULL PRIMARY KEY,
-        last_name character varying(20),
-        first_name character varying(10),
-        title character varying(30),
-        city character varying(15),
-        region character varying(15),
-        country character varying(15),
-        reports_to smallint
+        id SERIAL PRIMARY KEY,
+        customer_id bpchar,
+        revenue float,
+        high_low_byers character varying(255),
+        average_order_value float,
+        year int
     );
 """
-cur.execute(create_tb_dim_employees)
+cur.execute(create_tb_dim_revenue_per_cus)
+
+# Create a table dim_metric
+table_name = "dim_metric"
+create_tb_dim_metric = f"""
+    CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
+        id SERIAL PRIMARY KEY,
+        year int,
+        total_sale float,
+        contribution_precent float
+    );
+"""
+cur.execute(create_tb_dim_metric)
+
+# Create a table dim_region_w_customer
+table_name = "dim_region_w_customer"
+create_tb_dim_region_w_customer = f"""
+    CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
+        id SERIAL PRIMARY KEY,
+        region character varying(255),
+        count_customer int
+    );
+"""
+cur.execute(create_tb_dim_region_w_customer)
 
 # Create a table fact
 table_name = "fact_orders"
@@ -79,24 +100,14 @@ create_tb_fact_orders = f"""
         order_id int NOT NULL PRIMARY KEY,
         customer_id bpchar,
         product_id int,
-        employee_id int,
-        required_date date,
-        shipped_date date,
         unit_price real NOT NULL,
         quantity smallint NOT NULL,
         discount real NOT NULL,
         freight real,
-        cumulated_percentage int,
-        cumulated_sales int,
-        customer_sales int,
-        customer_sales_group int,
-        cumulated_percentage_region int,
-        cumulated_sales_region int,
-        region_group int,
-        region_sales int,
+        required_date date,
+        shipped_date date,
         FOREIGN KEY (customer_id) REFERENCES datamart_customer.dim_customer (customer_id),
-        FOREIGN KEY (product_id) REFERENCES datamart_customer.dim_products (product_id),
-        FOREIGN KEY (employee_id) REFERENCES datamart_customer.dim_employees (employee_id)
+        FOREIGN KEY (product_id) REFERENCES datamart_customer.dim_products (product_id)
     );
 """
 cur.execute(create_tb_fact_orders)

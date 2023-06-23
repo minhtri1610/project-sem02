@@ -7,11 +7,11 @@ GROUP BY c.customer_id;
 
 /*High,Low-Value Buyers*/
 WITH customer_revenue AS (
-    SELECT c.customer_id, SUM(od.unit_price * od.quantity) AS TotalRevenue
+    SELECT c.customer_id, SUM(od.unit_price * od.quantity) AS TotalRevenue, AVG(od.unit_price * od.quantity) AS AvgOrderValue,  date_part('year', o.order_date) as year
     FROM customers c
     JOIN orders o ON c.customer_id = o.customer_id
     JOIN order_details od ON o.order_id = od.order_id
-    GROUP BY c.customer_id
+    GROUP BY c.customer_id, year
 ),
 quartiles AS (
     SELECT
@@ -21,6 +21,8 @@ quartiles AS (
 SELECT
     customer_id,
     TotalRevenue,
+    AvgOrderValue,
+    year,
     CASE
         WHEN TotalRevenue >= (SELECT Q3 FROM quartiles) THEN 'High-Value Buyer'
         ELSE 'Low-Value Buyer'
