@@ -1,0 +1,18 @@
+bước 1. Nếu đã có schema datamart_customer ở PG thì chạy lệnh sau trước khi làm các bước tiếp theo
+DROP SCHEMA IF EXISTS datamart_customer CASCADE;
+
+bước 2. chạy file 01_create_dim_fact_tb.py
+Mục đích của file này là tạo cấu trúc cho datamarts
+
+bước 3: chạy file 02_update_or_create_data.py
+Mục đích của file này là đổ dữ liệu từ schema public vào schema datamart_customer
+
+file metric_query là phần query để mọi người xem qua
+
+Kết quả của dữ liệu schema datamart_customer mọi người có thể truy cập vào VPS này để xem
+
+pg_user = 'postgres'
+pg_pwd = 'admin12345'
+pg_server = '103.130.215.192'
+pg_db = 'northwind_v4'
+ kết quả --> schema datamart_customer
