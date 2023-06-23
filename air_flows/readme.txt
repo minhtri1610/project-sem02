@@ -1,0 +1,44 @@
+#setup
+#link hương dẫn cài đặt apache airflow
+https://github.com/apache/airflow
+
+# cách cài đặt trên MACOS
+# update python neu gap loi
+python3.9 -m pip install --upgrade pip
+
+#Khoi tao moi truong python 3
+python3 -m venv myenv
+source myenv/bin/activate   # Activate the virtual environment
+
+b1: pip3 install 'apache-airflow==2.6.2' \
+ --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.6.2/constraints-3.8.txt"
+
+# tao duong dan goc cua airflow tai vi tri thu muc dang dung
+export AIRFLOW_HOME=.
+
+# khởi tạo db
+airflow db init
+
+# khởi động webserver
+airflow webserver -p 8080
+
+# mở file airflow.cfg
+tìm tới dòng
+sql_alchemy_conn = sqlite:///
+
+thay thế dòng trên bằng sql_alchemy_conn = sqlite:////Users/IntelTri/WorkPlace/Aptech/Project-sem2/project-sem02/air_flows/airflow.db
+
+airflow db reset
+airflow db init
+
+# khởi động lai webserver
+airflow webserver -p 8080
+
+# truy cap vao web bang duong dan
+http://0.0.0.0:8080
+
+# tao user and pass
+airflow users create --username alphateam --firstname admin_alpha_data --lastname team --role Admin --email epsminhtri@gmail.com
+
+#nhap pass:
+admin123
