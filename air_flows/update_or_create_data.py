@@ -39,13 +39,12 @@ def update_or_create_db(columns_source, source_table, columns_target, target_tab
                 LEFT JOIN {source_schema}.order_details as odt ON odt.order_id = od.order_id
             """)
         elif target_table == 'dim_revenue_per_cus':
-            dbcursor.execute(f"""
-                              WITH customer_revenue AS (
-                                    SELECT c.customer_id, SUM(od.unit_price * od.quantity) AS revenue, AVG(od.unit_price * od.quantity) AS average_order_value,  date_part('year', o.order_date) as year
-                                    FROM {source_schema}.customers c
+            dbcursor.execute(f""" WITH customer_revenue AS ( SELECT c.customer_id, SUM(od.unit_price * od.quantity) 
+            AS revenue, AVG(od.unit_price * od.quantity) AS average_order_value,  date_part('year', o.order_date) as 
+            year FROM {source_schema}.customers c 
                                     JOIN {source_schema}.orders o ON c.customer_id = o.customer_id
                                     JOIN {source_schema}.order_details od ON o.order_id = od.order_id
-                                    GROUP BY c.customer_id, year
+                                    GROUP BY c.customer_id
                                 ),
                                 quartiles AS (
                                     SELECT
@@ -340,39 +339,39 @@ def import_data(table_name):
     except Exception as e:
         print('Error import_data:' + str(e))
 
+def init_update_or_create():
+    try:
+        print('Tiến trình đang chạy...')
 
-try:
-    print('Tiến trình đang chạy...')
+        print('-- Bắt đầu tải bảng dim_customer... --')
+        import_data('dim_customer')
+        print('-- Hoàn tất tải bảng dim_customer... --')
 
-    # print('-- Bắt đầu tải bảng dim_customer... --')
-    # import_data('dim_customer')
-    # print('-- Hoàn tất tải bảng dim_customer... --')
-    #
-    # print('-- Bắt đầu tải bảng dim_products... --')
-    # import_data('dim_products')
-    # print('-- Hoàn tất tải bảng dim_products... --')
-    #
-    # print('-- Bắt đầu tải bảng dim_revenue_per_cus... --')
-    # import_data('dim_revenue_per_cus')
-    # print('-- Hoàn tất tải bảng dim_revenue_per_cus... --')
+        print('-- Bắt đầu tải bảng dim_products... --')
+        import_data('dim_products')
+        print('-- Hoàn tất tải bảng dim_products... --')
 
-    # print('-- Bắt đầu tải bảng dim_region_w_customer... --')
-    # import_data('dim_region_w_customer')
-    # print('-- Hoàn tất tải bảng dim_region_w_customer... --')
+        print('-- Bắt đầu tải bảng dim_revenue_per_cus... --')
+        import_data('dim_revenue_per_cus')
+        print('-- Hoàn tất tải bảng dim_revenue_per_cus... --')
 
-    print('-- Bắt đầu tải bảng dim_metric... --')
-    import_data('dim_metric')
-    print('-- Hoàn tất tải bảng dim_metric... --')
+        print('-- Bắt đầu tải bảng dim_region_w_customer... --')
+        import_data('dim_region_w_customer')
+        print('-- Hoàn tất tải bảng dim_region_w_customer... --')
 
-    # print('-- Bắt đầu tải bảng fact_orders... --')
-    # import_data('fact_orders')
-    # print('-- Hoàn tất tải bảng fact_orders... --')
-    #
-    # print('-- Bắt đầu tải bảng dim_date... --')
-    # import_data('dim_date')
-    # print('-- Hoàn tất tải bảng dim_date... --')
+        print('-- Bắt đầu tải bảng dim_metric... --')
+        import_data('dim_metric')
+        print('-- Hoàn tất tải bảng dim_metric... --')
 
-    print('Hoàn tất tiến trình.')
-    conn.close()
-except Exception as e:
-    print('Error:' + str(e))
+        print('-- Bắt đầu tải bảng fact_orders... --')
+        import_data('fact_orders')
+        print('-- Hoàn tất tải bảng fact_orders... --')
+
+        print('-- Bắt đầu tải bảng dim_date... --')
+        import_data('dim_date')
+        print('-- Hoàn tất tải bảng dim_date... --')
+
+        print('Hoàn tất tiến trình.')
+        conn.close()
+    except Exception as e:
+        print('Error:' + str(e))

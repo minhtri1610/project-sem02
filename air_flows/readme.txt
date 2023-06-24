@@ -42,3 +42,17 @@ airflow users create --username alphateam --firstname admin_alpha_data --lastnam
 
 #nhap pass:
 admin123
+
+# khoi dong airflow tren macos
+source myenv/bin/activate
+airflow webserver -p 8080
+
+
+#DAG -> directed Acyclic Graph
+
+#cau hinh lai duong dan tai file airflow.cfg
+dags_folder = /Users/IntelTri/WorkPlace/Aptech/Project-sem2/project-sem02/air_flows
+airflow db reset
+
+#link thu muc goc ve thu muc hien tai
+ln -s /Users/IntelTri/WorkPlace/Aptech/Project-sem2/project-sem02/air_flows /Users/IntelTri/airflow

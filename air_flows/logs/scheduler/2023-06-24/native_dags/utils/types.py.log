@@ -1,0 +1,5 @@
+[2023-06-24T09:10:39.526+0700] {processor.py:157} INFO - Started process (PID=1718) to work on /Users/IntelTri/WorkPlace/Aptech/Project-sem2/project-sem02/air_flows/myenv/lib/python3.9/site-packages/airflow/utils/types.py
+[2023-06-24T09:10:39.527+0700] {processor.py:826} INFO - Processing file /Users/IntelTri/WorkPlace/Aptech/Project-sem2/project-sem02/air_flows/myenv/lib/python3.9/site-packages/airflow/utils/types.py for tasks to queue
+[2023-06-24T09:10:39.527+0700] {logging_mixin.py:149} INFO - [2023-06-24T09:10:39.527+0700] {dagbag.py:541} INFO - Filling up the DagBag from /Users/IntelTri/WorkPlace/Aptech/Project-sem2/project-sem02/air_flows/myenv/lib/python3.9/site-packages/airflow/utils/types.py
+[2023-06-24T09:10:39.529+0700] {processor.py:838} WARNING - No viable dags retrieved from /Users/IntelTri/WorkPlace/Aptech/Project-sem2/project-sem02/air_flows/myenv/lib/python3.9/site-packages/airflow/utils/types.py
+[2023-06-24T09:10:40.000+0700] {processor.py:179} INFO - Processing /Users/IntelTri/WorkPlace/Aptech/Project-sem2/project-sem02/air_flows/myenv/lib/python3.9/site-packages/airflow/utils/types.py took 0.474 seconds

@@ -54,7 +54,6 @@ group by drpc.year, tbl_top_25.total_revenue_top ORDER BY drpc.year;
 -- SELECT SUM(total) AS total_revenue, "year"
 -- FROM (
 -- 	select SUM(revenue) as total, "year"
--- 	from dim_revenue_per_cus group by year, customer_id ORDER BY total DESC LIMIT 25
+-- 	from dim_revenue_per_cus group by customer_id ORDER BY total DESC LIMIT 25
 -- 	) subquery
--- GROUP BY "year"
 -- ORDER BY "year";
