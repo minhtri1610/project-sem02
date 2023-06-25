@@ -4,7 +4,7 @@ import psycopg2
 pg_user = 'postgres'
 pg_pwd = 'admin12345'
 pg_server = '103.130.215.192'
-pg_db = 'northwind_v4'
+pg_db = 'northwind_etl'
 
 conn = psycopg2.connect(
     host=pg_server,
@@ -40,11 +40,10 @@ def update_or_create_db(columns_source, source_table, columns_target, target_tab
             """)
         elif target_table == 'dim_revenue_per_cus':
             dbcursor.execute(f""" WITH customer_revenue AS ( SELECT c.customer_id, SUM(od.unit_price * od.quantity) 
-            AS revenue, AVG(od.unit_price * od.quantity) AS average_order_value,  date_part('year', o.order_date) as 
-            year FROM {source_schema}.customers c 
+            AS revenue, AVG(od.unit_price * od.quantity) AS average_order_value, date_part('year', o.order_date) as year, date_part('month', o.order_date) as month,date_part('quarter', o.order_date) as quarter FROM {source_schema}.customers c 
                                     JOIN {source_schema}.orders o ON c.customer_id = o.customer_id
                                     JOIN {source_schema}.order_details od ON o.order_id = od.order_id
-                                    GROUP BY c.customer_id
+                                    GROUP BY c.customer_id, year, month, quarter
                                 ),
                                 quartiles AS (
                                     SELECT
@@ -59,9 +58,11 @@ def update_or_create_db(columns_source, source_table, columns_target, target_tab
                                         ELSE 'Low-Value Buyer'
                                     END AS high_low_byers,
                                     average_order_value,
-                                    year
+                                    year,
+                                    month,
+                                    quarter
                                 FROM
-                                    customer_revenue
+                                    customer_revenue ORDER BY revenue DESC
                                 """)
         elif target_table == 'dim_region_w_customer':
             dbcursor.execute(f"""
@@ -375,3 +376,5 @@ def init_update_or_create():
         conn.close()
     except Exception as e:
         print('Error:' + str(e))
+
+# init_update_or_create()

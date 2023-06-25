@@ -41,7 +41,8 @@ def update_or_create_db(columns_source, source_table, columns_target, target_tab
         elif target_table == 'dim_revenue_per_cus':
             dbcursor.execute(f"""
                               WITH customer_revenue AS (
-                                    SELECT c.customer_id, SUM(od.unit_price * od.quantity) AS revenue, AVG(od.unit_price * od.quantity) AS average_order_value,  date_part('year', o.order_date) as year
+                                    SELECT c.customer_id, SUM(od.unit_price * od.quantity) AS revenue, AVG(od.unit_price * od.quantity) AS average_order_value,  CONCAT(date_part('year', o.order_date), '-', date_part('month', o.order_date)) as 
+            year
                                     FROM {source_schema}.customers c
                                     JOIN {source_schema}.orders o ON c.customer_id = o.customer_id
                                     JOIN {source_schema}.order_details od ON o.order_id = od.order_id

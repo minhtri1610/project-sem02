@@ -67,7 +67,9 @@ def run_task():
             revenue float,
             high_low_byers character varying(255),
             average_order_value float,
-            year int
+            year int,
+            month int,
+            quarter int
         );
     """
     cur.execute(create_tb_dim_revenue_per_cus)
