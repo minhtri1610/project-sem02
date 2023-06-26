@@ -1,0 +1,15 @@
+Table Name,PostgreSQL Count,MS SQL Server Count
+customer_demographics,0,0
+customer_customer_demo,0,0
+customers,91,91
+employees,9,9
+categories,8,8
+products,77,77
+suppliers,29,29
+orders,830,830
+shippers,6,3
+region,4,4
+territories,53,53
+employee_territories,49,49
+order_details,2155,2155
+us_states,51,0

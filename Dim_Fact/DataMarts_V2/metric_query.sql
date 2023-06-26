@@ -57,3 +57,10 @@ group by drpc.year, tbl_top_25.total_revenue_top ORDER BY drpc.year;
 -- 	from dim_revenue_per_cus group by customer_id ORDER BY total DESC LIMIT 25
 -- 	) subquery
 -- ORDER BY "year";
+
+
+-- CREATE TABLE IF NOT EXISTS datamart_customer.dim_region (
+--             id SERIAL NOT NULL PRIMARY KEY,
+--             city character varying(255),
+--             country character varying(255)
+--         );

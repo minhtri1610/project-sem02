@@ -26,7 +26,7 @@ sql_user = 'root'
 # sql db info
 sql_driver = '{SQL Server}'
 sql_server = 'INTELPC'
-sql_database = 'northwind_sql'
+sql_database = 'northwind_sql3'
 
 # PG info
 pg_user = 'postgres'
@@ -204,17 +204,17 @@ def transform_table(tbl, df_sql):
                          "Fax": "fax",
                          })
             data_transform_type = {
-                "customer_id": sqlalchemy.types.String,
-                "company_name": sqlalchemy.types.String,
-                "contact_name": sqlalchemy.types.String,
-                "contact_title": sqlalchemy.types.String,
-                "address": sqlalchemy.types.String,
-                "city": sqlalchemy.types.String,
-                "region": sqlalchemy.types.String,
-                "postal_code": sqlalchemy.types.String,
-                "country": sqlalchemy.types.String,
-                "phone": sqlalchemy.types.String,
-                "fax": sqlalchemy.types.String,
+                "customer_id": sqlalchemy.types.String(255),
+                "company_name": sqlalchemy.types.String(255),
+                "contact_name": sqlalchemy.types.String(255),
+                "contact_title": sqlalchemy.types.String(255),
+                "address": sqlalchemy.types.String(255),
+                "city": sqlalchemy.types.String(255),
+                "region": sqlalchemy.types.String(255),
+                "postal_code": sqlalchemy.types.String(255),
+                "country": sqlalchemy.types.String(255),
+                "phone": sqlalchemy.types.String(255),
+                "fax": sqlalchemy.types.String(255),
             }
             data_transform.append(data_transform_col)
             data_transform.append(data_transform_type)
@@ -281,8 +281,8 @@ def transform_table(tbl, df_sql):
                          })
 
             data_transform_type = {"shipper_id": sqlalchemy.types.Integer,
-                                   "company_name": sqlalchemy.types.String,
-                                   "phone": sqlalchemy.types.String}
+                                   "company_name": sqlalchemy.types.String(255),
+                                   "phone": sqlalchemy.types.String(255)}
             data_transform.append(data_transform_col)
             data_transform.append(data_transform_type)
             return data_transform
@@ -819,12 +819,12 @@ def execute_to_table(dbcursor, table_name, row, type_action):
 
             if type_action == 'update':
                 update_query = f'UPDATE {schema_target}.{table_name} SET company_name = %s, contact_name = %s, contact_title = %s, address = %s, city = %s, region = %s, postal_code = %s, phone = %s, fax = %s WHERE {col_id} = %s'
-                dbcursor.execute(update_query, (row[index['company_name']], row[index['contact_name']], row[index['contact_title']], row[index['address']], row[index['city']], row[index['region']], row[index['postal_code']], row[index['phone']], row[index['fax']], row[index['customer_id']]))
+                dbcursor.execute(update_query, (row[index['company_name']], row[index['contact_name']], row[index['contact_title']], row[index['address']], row[index['city']], str(row[index['region']]), str(row[index['postal_code']]), str(row[index['phone']]), str(row[index['fax']]), str(row[index['customer_id']])))
 
             elif type_action == 'insert':
                 insert_query = f'INSERT INTO {schema_target}.{table_name} (customer_id, company_name, contact_name, contact_title, address, city, region, postal_code, phone, fax) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
                 # print(insert_query)
-                dbcursor.execute(insert_query, (row[index['customer_id']], row[index['company_name']], row[index['contact_name']], row[index['contact_title']], row[index['address']], row[index['city']], row[index['region']], row[index['postal_code']], row[index['phone']], row[index['fax']]))
+                dbcursor.execute(insert_query, str((row[index['customer_id']]), row[index['company_name']], row[index['contact_name']], row[index['contact_title']], row[index['address']], row[index['city']], str(row[index['region']]), str(row[index['postal_code']]), str(row[index['phone']]), str(row[index['fax']])))
 
         if table_name == 'employee_territories':
             col_id = 'employee_id'

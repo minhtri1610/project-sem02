@@ -133,6 +133,16 @@ def run_task():
     """
     cur.execute(create_tb_dim_date)
 
+    # Create a table dim_region
+    table_name = "dim_region"
+    create_tb_dim_date = f"""
+        CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
+            city character varying(255) NOT NULL PRIMARY KEY,
+            country character varying(255)
+        );
+    """
+    cur.execute(create_tb_dim_date)
+
     # Commit the changes to the database
     conn.commit()
 

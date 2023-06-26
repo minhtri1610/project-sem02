@@ -102,6 +102,10 @@ def update_or_create_db(columns_source, source_table, columns_target, target_tab
                                 FROM {target_schema}.{source_table} as fod
                                 INNER JOIN {source_schema}.orders as od on od.order_id = fod.order_id
                             """)
+        elif target_table == 'dim_region':
+            dbcursor.execute(f"""
+                SELECT city, country FROM {source_schema}.customers GROUP BY city, country ORDER BY country ASC
+            """)
         else:
             dbcursor.execute(f'SELECT {columns_source} FROM {source_schema}.{source_table}')
 
@@ -202,15 +206,15 @@ def execute_to_table(dbcursor, target_table, row, type_action):
 
         if target_table == 'dim_revenue_per_cus':
             col_id = 'customer_id'
-            index = {'customer_id': 0, 'revenue': 1, 'high_low_byers': 2, 'average_order_value': 3, 'year': 4}
+            index = {'customer_id': 0, 'revenue': 1, 'high_low_byers': 2, 'average_order_value': 3, 'year': 4, 'month': 5, 'quarter': 6}
             if type_action == 'update':
-                update_query = f'UPDATE {target_schema}.{target_table} SET revenue = %s, high_low_byers = %s, average_order_value = %s, year = %s WHERE {col_id} = %s and year = %s'
-                dbcursor.execute(update_query, (row[index['revenue']], row[index['high_low_byers']], row[index['average_order_value']], row[index['year']], row[index['customer_id']], row[index['year']]))
+                update_query = f'UPDATE {target_schema}.{target_table} SET revenue = %s, high_low_byers = %s, average_order_value = %s, year = %s , month = %s, quarter = %s WHERE {col_id} = %s and year = %s'
+                dbcursor.execute(update_query, (row[index['revenue']], row[index['high_low_byers']], row[index['average_order_value']], row[index['year']], row[index['month']], row[index['quarter']], row[index['customer_id']], row[index['year']]))
 
             elif type_action == 'insert':
-                insert_query = f'INSERT INTO {target_schema}.{target_table} (customer_id, revenue, average_order_value, year, high_low_byers) VALUES (%s, %s, %s, %s, %s)'
+                insert_query = f'INSERT INTO {target_schema}.{target_table} (customer_id, revenue, average_order_value, year, high_low_byers, month, quarter) VALUES (%s, %s, %s, %s, %s, %s, %s)'
                 # print(insert_query)
-                dbcursor.execute(insert_query, (row[index['customer_id']], row[index['revenue']], row[index['average_order_value']], row[index['year']], row[index['high_low_byers']] ))
+                dbcursor.execute(insert_query, (row[index['customer_id']], row[index['revenue']], row[index['average_order_value']], row[index['year']], row[index['high_low_byers']], row[index['month']], row[index['quarter']] ))
 
 
         if target_table == 'dim_metric':
@@ -263,6 +267,17 @@ def execute_to_table(dbcursor, target_table, row, type_action):
                     row[index['order_id']], row[index['order_date']], row[index['year']],
                     row[index['month']], row[index['day']], row[index['short_name']],
                     row[index['quarter']]))
+
+        if target_table == 'dim_region':
+            col_id = 'city'
+            index = {'city': 0, 'country': 1}
+            if type_action == 'update':
+                update_query = f'UPDATE {target_schema}.{target_table} SET city = %s, country = %s  WHERE {col_id} = %s'
+                # print(insert_query)
+                dbcursor.execute(update_query, (row[index['city']], row[index['country']], row[index['city']]))
+            elif type_action == 'insert':
+                insert_query = f'INSERT INTO {target_schema}.{target_table} (city, country) VALUES (%s, %s)'
+                dbcursor.execute(insert_query, (row[index['city']], row[index['country']]))
 
     except Exception as e:
         print('Error execute_to_table:' + str(e))
@@ -324,19 +339,18 @@ def import_data(table_name):
             print('insert or update table fact_orders successfully')
 
         if table_name == 'dim_date':
-            # id
-            # order_id
-            # order_date
-            # year
-            # month
-            # day
-            # short_name
-            # quarter
 
             columns_source = []
             columns_target = []
             update_or_create_db(columns_source, 'fact_orders', columns_target, 'dim_date', 'order_id')
             # print('insert or update table dim_products successfully')
+
+        if table_name == 'dim_region':
+
+            columns_source = []
+            columns_target = []
+            update_or_create_db(columns_source, 'customers', columns_target, 'dim_region', 'city')
+
     except Exception as e:
         print('Error import_data:' + str(e))
 
@@ -372,9 +386,14 @@ def init_update_or_create():
         import_data('dim_date')
         print('-- Hoàn tất tải bảng dim_date... --')
 
+        print('-- Bắt đầu tải bảng dim_region... --')
+        import_data('dim_region')
+        print('-- Hoàn tất tải bảng dim_region... --')
+
         print('Hoàn tất tiến trình.')
         conn.close()
     except Exception as e:
         print('Error:' + str(e))
 
-# init_update_or_create()
+
+init_update_or_create()
