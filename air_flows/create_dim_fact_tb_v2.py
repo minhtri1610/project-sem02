@@ -12,23 +12,25 @@ conn = psycopg2.connect(
     user=pg_user,
     password=pg_pwd
 )
+schema_name = "datamart_customer"
+cur = conn.cursor()
 
 
-def run_task():
-    # Create a cursor object to execute SQL queries
-    cur = conn.cursor()
-    # delete schema
-    # DROP SCHEMA IF EXISTS datamart_customer CASCADE;
+# delete schema
+# DROP SCHEMA IF EXISTS datamart_customer CASCADE;
+
+def create_schema_data():
     print('Bắt đầu tiến trình tạo datamart')
-
     # Create a schema
-    schema_name = "datamart_customer"
     create_schema_query = f"CREATE SCHEMA IF NOT EXISTS {schema_name};"
     cur.execute(create_schema_query)
 
+
+def create_tb_dim_customer():
+    # Create a cursor object to execute SQL queries
     # Create a table dim_customer
     table_name = "dim_customer"
-    create_tb_dim_customer = f"""
+    _tb_dim_customer = f"""
         CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
             customer_id bpchar NOT NULL PRIMARY KEY,
             company_name character varying(40) NOT NULL,
@@ -40,11 +42,13 @@ def run_task():
             country character varying(15)
         );
     """
-    cur.execute(create_tb_dim_customer)
+    cur.execute(_tb_dim_customer)
 
+
+def create_tb_dim_products():
     # Create a table dim_products
     table_name = "dim_products"
-    create_tb_dim_products = f"""
+    _tb_dim_products = f"""
         CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
             product_id int NOT NULL PRIMARY KEY,
             product_name character varying(40) NOT NULL,
@@ -56,11 +60,13 @@ def run_task():
             discontinued integer NOT NULL
         );
     """
-    cur.execute(create_tb_dim_products)
+    cur.execute(_tb_dim_products)
 
+
+def create_tb_dim_revenue_per_cus():
     # Create a table dim_employees
     table_name = "dim_revenue_per_cus"
-    create_tb_dim_revenue_per_cus = f"""
+    _dim_revenue_per_cus = f"""
         CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
             id SERIAL PRIMARY KEY,
             customer_id bpchar,
@@ -72,11 +78,13 @@ def run_task():
             quarter int
         );
     """
-    cur.execute(create_tb_dim_revenue_per_cus)
+    cur.execute(_dim_revenue_per_cus)
 
+
+def create_tb_dim_metric():
     # Create a table dim_metric
     table_name = "dim_metric"
-    create_tb_dim_metric = f"""
+    _tb_dim_metric = f"""
         CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
             id SERIAL PRIMARY KEY,
             year int,
@@ -84,22 +92,26 @@ def run_task():
             contribution_precent float
         );
     """
-    cur.execute(create_tb_dim_metric)
+    cur.execute(_tb_dim_metric)
 
+
+def create_tb_dim_region_w_customer():
     # Create a table dim_region_w_customer
     table_name = "dim_region_w_customer"
-    create_tb_dim_region_w_customer = f"""
+    _tb_dim_region_w_customer = f"""
         CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
             id SERIAL PRIMARY KEY,
             region character varying(255),
             count_customer int
         );
     """
-    cur.execute(create_tb_dim_region_w_customer)
+    cur.execute(_tb_dim_region_w_customer)
 
+
+def create_tb_fact_orders():
     # Create a table fact
     table_name = "fact_orders"
-    create_tb_fact_orders = f"""
+    _tb_fact_orders = f"""
         CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
             order_id int NOT NULL PRIMARY KEY,
             customer_id bpchar,
@@ -115,11 +127,13 @@ def run_task():
             FOREIGN KEY (product_id) REFERENCES datamart_customer.dim_products (product_id)
         );
     """
-    cur.execute(create_tb_fact_orders)
+    cur.execute(_tb_fact_orders)
 
+
+def create_tb_dim_date():
     # Create a table dim_date
     table_name = "dim_date"
-    create_tb_dim_date = f"""
+    _tb_dim_date = f"""
         CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
             id SERIAL NOT NULL PRIMARY KEY,
             order_date date,
@@ -130,26 +144,43 @@ def run_task():
             quarter INT
         );
     """
-    cur.execute(create_tb_dim_date)
+    cur.execute(_tb_dim_date)
 
+
+def create_tb_dim_region():
     # Create a table dim_region
     table_name = "dim_region"
-    create_tb_dim_region = f"""
+    _tb_dim_region = f"""
         CREATE TABLE IF NOT EXISTS {schema_name}.{table_name} (
             city character varying(255) NOT NULL PRIMARY KEY,
             country character varying(255)
         );
     """
-    cur.execute(create_tb_dim_region)
+    cur.execute(_tb_dim_region)
 
+
+def run_task():
+    create_schema_data()
+    create_tb_dim_customer()
+    create_tb_dim_products()
+    create_tb_dim_revenue_per_cus()
+    create_tb_dim_metric()
+    create_tb_dim_region_w_customer()
+    create_tb_fact_orders()
+    create_tb_dim_date()
+    create_tb_dim_region()
     # Commit the changes to the database
-    conn.commit()
-
-    print('Hoàn tất tiến trình tạo datamart')
-
-    # Close the cursor and connection
-    cur.close()
-    conn.close()
+    # conn.commit()
+    # print('Hoàn tất tiến trình tạo datamart')
+    # # Close the cursor and connection
+    # cur.close()
+    # conn.close()
 
 
-run_task()
+# run_task()
+# # Commit the changes to the database
+conn.commit()
+print('Hoàn tất tiến trình tạo datamart')
+# Close the cursor and connection
+cur.close()
+conn.close()

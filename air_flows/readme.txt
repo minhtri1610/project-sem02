@@ -75,7 +75,9 @@ airflow tasks run tri_test_02 run_etl 2023-06-25
 Cac buoc chay
 
 - viet file python
+- rename lai id
 - chay airflow webserver -p 8080
-- run triger dags
-- airflow schedule
+- run triger dags, active action
+- airflow scheduler
+- chay airflow webserver -p 8080
 

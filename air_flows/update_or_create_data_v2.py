@@ -399,46 +399,71 @@ def import_data(table_name):
     except Exception as e:
         print('Error import_data:' + str(e))
 
+
+def load_dim_customer():
+    print('-- Bắt đầu tải bảng dim_customer... --')
+    import_data('dim_customer')
+    print('-- Hoàn tất tải bảng dim_customer... --')
+
+
+def load_dim_products():
+    print('-- Bắt đầu tải bảng dim_products... --')
+    import_data('dim_products')
+    print('-- Hoàn tất tải bảng dim_products... --')
+
+
+def load_dim_revenue_per_cus():
+    print('-- Bắt đầu tải bảng dim_revenue_per_cus... --')
+    import_data('dim_revenue_per_cus')
+    print('-- Hoàn tất tải bảng dim_revenue_per_cus... --')
+
+
+def load_dim_region_w_customer():
+    print('-- Bắt đầu tải bảng dim_region_w_customer... --')
+    import_data('dim_region_w_customer')
+    print('-- Hoàn tất tải bảng dim_region_w_customer... --')
+
+
+def load_dim_metric():
+    print('-- Bắt đầu tải bảng dim_metric... --')
+    import_data('dim_metric')
+    print('-- Hoàn tất tải bảng dim_metric... --')
+
+
+def load_dim_region():
+    print('-- Bắt đầu tải bảng dim_region... --')
+    import_data('dim_region')
+    print('-- Hoàn tất tải bảng dim_region... --')
+
+
+def load_fact_orders():
+    print('-- Bắt đầu tải bảng fact_orders... --')
+    import_data('fact_orders')
+    print('-- Hoàn tất tải bảng fact_orders... --')
+
+
+def load_dim_date():
+    print('-- Bắt đầu tải bảng dim_date... --')
+    import_data('dim_date')
+    print('-- Hoàn tất tải bảng dim_date... --')
+
+
 def init_update_or_create():
     try:
         print('Tiến trình đang chạy...')
-
-        print('-- Bắt đầu tải bảng dim_customer... --')
-        import_data('dim_customer')
-        print('-- Hoàn tất tải bảng dim_customer... --')
-
-        print('-- Bắt đầu tải bảng dim_products... --')
-        import_data('dim_products')
-        print('-- Hoàn tất tải bảng dim_products... --')
-
-        print('-- Bắt đầu tải bảng dim_revenue_per_cus... --')
-        import_data('dim_revenue_per_cus')
-        print('-- Hoàn tất tải bảng dim_revenue_per_cus... --')
-
-        print('-- Bắt đầu tải bảng dim_region_w_customer... --')
-        import_data('dim_region_w_customer')
-        print('-- Hoàn tất tải bảng dim_region_w_customer... --')
-
-        print('-- Bắt đầu tải bảng dim_metric... --')
-        import_data('dim_metric')
-        print('-- Hoàn tất tải bảng dim_metric... --')
-
-        print('-- Bắt đầu tải bảng fact_orders... --')
-        import_data('fact_orders')
-        print('-- Hoàn tất tải bảng fact_orders... --')
-
-        print('-- Bắt đầu tải bảng dim_date... --')
-        import_data('dim_date')
-        print('-- Hoàn tất tải bảng dim_date... --')
-
-        print('-- Bắt đầu tải bảng dim_region... --')
-        import_data('dim_region')
-        print('-- Hoàn tất tải bảng dim_region... --')
-
+        load_dim_customer()
+        load_dim_products()
+        load_dim_revenue_per_cus()
+        load_dim_region_w_customer()
+        load_dim_metric()
+        load_dim_region()
+        load_fact_orders()
+        load_dim_date()
         print('Hoàn tất tiến trình.')
         conn.close()
     except Exception as e:
         print('Error:' + str(e))
 
 
-init_update_or_create()
+# init_update_or_create()
+conn.close()
